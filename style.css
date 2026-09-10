@@ -93,55 +93,93 @@ nav ul li a:hover {
     position: relative;
     display: flex;
     justify-content: center;
-    gap: 10px;
     margin: 28px auto 35px;
-    max-width: 650px;
+    max-width: 560px;
+    padding: 0 20px;
+}
+
+.search-shell {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 58px;
+    background: #ffffff;
+    border: 2px solid #dbeafe;
+    border-radius: 999px;
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.1);
+    transition: 0.2s ease;
+    padding: 0 8px 0 20px;
+}
+
+.search-shell:focus-within {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12), 0 6px 20px rgba(37, 99, 235, 0.12);
+}
+
+.search-icon {
+    flex-shrink: 0;
+    color: #94a3b8;
 }
 
 .weather-search input {
     flex: 1;
-    height: 52px;
-    padding: 0 17px;
-    border: 2px solid #dbeafe;
-    border-radius: 12px;
-    background: #ffffff;
-    font-size: 16px;
+    height: 100%;
+    min-width: 0;
+    border: none;
     outline: none;
-    transition: 0.25s ease;
+    background: transparent;
+    padding: 0 12px;
+    font-size: 16px;
+    font-family: inherit;
+    color: #1f2937;
 }
 
-.weather-search input:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+.weather-search input::placeholder {
+    color: #9ca3af;
 }
 
 .weather-search button {
-    height: 52px;
-    padding: 0 22px;
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border: none;
-    border-radius: 12px;
+    border-radius: 50%;
     background: #2563eb;
     color: #ffffff;
-    font-size: 16px;
-    font-weight: 700;
     cursor: pointer;
-    transition: 0.25s ease;
-    box-shadow: 0 5px 12px rgba(37, 99, 235, 0.2);
+    transition: 0.2s ease;
 }
 
 .weather-search button:hover {
     background: #1d4ed8;
-    transform: translateY(-2px);
+    transform: scale(1.05);
+}
+
+.weather-search button:disabled {
+    cursor: default;
+    opacity: 0.85;
+}
+
+.weather-search button.is-loading svg {
+    animation: search-spin 0.8s linear infinite;
+}
+
+@keyframes search-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 #citySuggestion {
     position: absolute;
-    top: 55px;
-    left: 0;
-    width: calc(100% - 150px);
+    top: 66px;
+    left: 20px;
+    right: 20px;
     background: #ffffff;
-    border-radius: 0 0 12px 12px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
     z-index: 2000;
     overflow: hidden;
     text-align: left;
@@ -667,31 +705,27 @@ nav ul li a:hover {
     }
 
     .weather-search {
-        flex-direction: column;
-        gap: 12px;
-        padding: 0 4px;
+        padding: 0 14px;
     }
 
-    .weather-search input,
-    .weather-search button {
-        width: 100%;
-        height: 68px;
-        font-size: 19px;
+    .search-shell {
+        height: 60px;
+        padding: 0 6px 0 18px;
     }
 
     .weather-search input {
-        padding: 0 20px;
-        border-width: 2px;
-        border-radius: 14px;
+        font-size: 17px;
     }
 
     .weather-search button {
-        border-radius: 14px;
+        width: 48px;
+        height: 48px;
     }
 
     #citySuggestion {
-        width: 100%;
-        top: 118px;
+        left: 14px;
+        right: 14px;
+        top: 68px;
     }
 
     .weather-card .temperature {
