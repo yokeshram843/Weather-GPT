@@ -1,3 +1,22 @@
+/* Smooth-scrolls to the chat section and focuses the input, so tapping
+   the floating "Ask AI" button takes the user straight to a ready-to-type
+   field instead of just eyeballing the right spot on the page. */
+function scrollToChat() {
+    const chatSection = document.getElementById("chatSection");
+
+    if (!chatSection) return;
+
+    chatSection.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    const chatInput = document.getElementById("chatInput");
+
+    if (chatInput) {
+        setTimeout(function () {
+            chatInput.focus();
+        }, 400);
+    }
+}
+
 /* ----------------------------------------------------------
    Windy embed — no API key needed for the basic iframe embed.
    Centers Windy's interactive wind map on the searched
@@ -141,6 +160,12 @@ async function searchWeather(cityFromUrl = "") {
 
         if (weatherResults) {
             weatherResults.style.display = "block";
+        }
+
+        const askAiFab = document.getElementById("askAiFab");
+
+        if (askAiFab) {
+            askAiFab.style.display = "flex";
         }
 
         const weatherResponse = await fetchWithRetry(
