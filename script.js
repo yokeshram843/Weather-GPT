@@ -573,7 +573,29 @@ function askWeatherGPT() {
 
     const lowerQuestion = question.toLowerCase();
 
-    const isTamil = /[\u0B80-\u0BFF]/.test(question);
+    const hasTamilScript = /[\u0B80-\u0BFF]/.test(question);
+
+    // Thanglish = Tamil words typed in Latin letters (e.g. "nalikku mazhai
+    // peyyuma"). There's no Unicode signal for this, so we match against a
+    // list of common Tamil weather-vocabulary words spelled phonetically.
+    // If the question uses these words but has no Tamil script, treat it
+    // as Thanglish and still reply in Tamil — matching the language the
+    // person is actually asking in, not just the script they typed it in.
+    const thanglishWords = [
+        "nalikku", "nalaki", "naalaiki", "naalai", "indha",
+        "mazhai", "veyyil", "sudu", "thani",
+        "kaathu", "kaatru", "eeram", "kulir", "veppam",
+        "vaanilai", "eppadi", "irukku", "peyyuma", "peyyumaa",
+        "varuma", "poidalama", "poidalaama", "velila", "veliya",
+        "pogalama", "pogalaama", "kudai", "thuni", "kaaya",
+        "echarikkai", "aabathu", "bayama"
+    ];
+
+    const hasThanglish = thanglishWords.some(function (word) {
+        return lowerQuestion.includes(word);
+    });
+
+    const isTamil = hasTamilScript || hasThanglish;
 
     const hasAny = (...words) =>
         words.some(word => lowerQuestion.includes(word));
