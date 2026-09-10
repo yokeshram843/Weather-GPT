@@ -573,6 +573,156 @@ function updateWeatherAlert(weatherCode, city) {
         }
     }
 }
+/* ----------------------------------------------------------
+   Chat question suggestions — Google-style dropdown that
+   filters a bank of common weather questions as the user
+   types. Matching is typo-tolerant and works across English,
+   Thanglish and Tamil, so a misspelled or half-typed question
+   still surfaces the right suggestion to click.
+   ---------------------------------------------------------- */
+
+const chatQuestionBank = [
+    // English
+    "Will it rain tomorrow?",
+    "Will it rain today?",
+    "Should I carry an umbrella?",
+    "What is the temperature now?",
+    "How hot is it today?",
+    "What is the humidity?",
+    "How fast is the wind?",
+    "Show me the 7 day forecast",
+    "Are there any weather alerts?",
+    "Can I dry clothes today?",
+    "Is it safe to travel today?",
+    "Can I go outside now?",
+    "How does it feel outside?",
+    "Will it be hot tomorrow?",
+
+    // Thanglish
+    "Nalikku mazhai peyyuma?",
+    "Innaikku mazhai peyyuma?",
+    "Nalikku veyil adikkuma?",
+    "Indha ooru sudu evlo irukku?",
+    "Kudai edukkanuma?",
+    "Thuni kaaya poda mudiyuma?",
+    "Veliya poga mudiyuma?",
+    "Kaathu evlo veganama irukku?",
+    "Eerapadham evlo irukku?",
+    "Ethachum echarikkai irukka?",
+    "Indha ooru vaanilai eppadi irukku?",
+    "Varum naatkal vaanilai eppadi irukkum?",
+
+    // Tamil
+    "இன்று வானிலை எப்படி இருக்கு?",
+    "நாளைக்கு மழை பெய்யுமா?",
+    "இப்போது வெப்பநிலை என்ன?",
+    "குடை எடுக்கணுமா?",
+    "ஏதாவது எச்சரிக்கை இருக்கா?",
+    "வெளியே போகலாமா?"
+];
+
+function initChatSuggestions() {
+    const input = document.getElementById("chatInput");
+    const box = document.getElementById("chatSuggestion");
+
+    if (!input || !box) return;
+
+    input.addEventListener("input", function () {
+        const query = input.value.trim().toLowerCase();
+
+        if (query.length < 2) {
+            box.innerHTML = "";
+            return;
+        }
+
+        const matches = chatQuestionBank.filter(function (question) {
+            const lower = question.toLowerCase();
+
+            if (lower.includes(query)) return true;
+
+            // Typo tolerance: compare the typed words against the question's
+            // words so "mazai" still surfaces "Nalikku mazhai peyyuma?".
+            return query.split(/\s+/).every(function (typedWord) {
+                if (typedWord.length < 4) return lower.includes(typedWord);
+
+                return lower.split(/\s+/).some(function (qWord) {
+                    const clean = qWord.replace(/[?.,]/g, "");
+                    if (clean.includes(typedWord)) return true;
+                    if (Math.abs(clean.length - typedWord.length) > 2) return false;
+                    return editDistance(typedWord, clean) <= 2;
+                });
+            });
+        }).slice(0, 6);
+
+        if (matches.length === 0) {
+            box.innerHTML = "";
+            return;
+        }
+
+        box.innerHTML = "";
+
+        matches.forEach(function (question) {
+            const item = document.createElement("div");
+            item.className = "chat-suggestion-item";
+            item.textContent = question;
+
+            item.addEventListener("click", function () {
+                input.value = question;
+                box.innerHTML = "";
+                askWeatherGPT();
+            });
+
+            box.appendChild(item);
+        });
+    });
+
+    // Close the dropdown when clicking elsewhere on the page.
+    document.addEventListener("click", function (event) {
+        if (event.target !== input && !box.contains(event.target)) {
+            box.innerHTML = "";
+        }
+    });
+
+    // Enter submits the question directly.
+    input.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+            box.innerHTML = "";
+            askWeatherGPT();
+        }
+    });
+}
+
+/* Levenshtein edit distance — how many single-character insertions,
+   deletions or substitutions turn one word into another. Used to let the
+   chatbot tolerate typos in both English and Thanglish keywords. */
+function editDistance(a, b) {
+    if (a === b) return 0;
+    if (!a.length) return b.length;
+    if (!b.length) return a.length;
+
+    let previous = [];
+
+    for (let j = 0; j <= b.length; j++) previous[j] = j;
+
+    for (let i = 1; i <= a.length; i++) {
+        const current = [i];
+
+        for (let j = 1; j <= b.length; j++) {
+            const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+
+            current[j] = Math.min(
+                current[j - 1] + 1,
+                previous[j] + 1,
+                previous[j - 1] + cost
+            );
+        }
+
+        previous = current;
+    }
+
+    return previous[b.length];
+}
+
 /* Fills the chat input with a suggested question and asks it right away —
    used by the quick-suggestion chips under the chat box. */
 function askSuggestion(question) {
@@ -635,8 +785,22 @@ function askWeatherGPT() {
 
     const isTamil = hasTamilScript || hasThanglish;
 
+    /* Matches a keyword either exactly, or approximately against each word
+       the user typed — so "mazai", "temprature", "umbrela" or "nalike" still
+       land on the right topic. Short keywords (<5 chars) require an exact
+       match, since one-character slop on a short word causes false hits. */
     const hasAny = (...words) =>
-        words.some(word => lowerQuestion.includes(word));
+        words.some(function (word) {
+            if (lowerQuestion.includes(word)) return true;
+            if (word.length < 5 || word.includes(" ")) return false;
+
+            const tolerance = word.length >= 7 ? 2 : 1;
+
+            return lowerQuestion.split(/\s+/).some(function (typed) {
+                if (Math.abs(typed.length - word.length) > tolerance) return false;
+                return editDistance(typed, word) <= tolerance;
+            });
+        });
 
     const city = window.currentCity;
     const temperature = window.currentTemperature;
@@ -1087,9 +1251,44 @@ function askWeatherGPT() {
               windSpeed +
               " km/h.";
     } else {
+        // Catch-all: instead of dead-ending with "I can only help with...",
+        // give a genuinely useful full weather summary. Most unmatched
+        // questions are still weather questions we simply didn't have a
+        // specific keyword for, so answering with everything we know is
+        // far more helpful than refusing.
         answer = isTamil
-            ? "நான் weather, temperature, rain, humidity, wind, forecast, alerts மற்றும் weather-based practical questionsக்கு மட்டும் உதவ முடியும்."
-            : "I can help with weather, temperature, rain, humidity, wind, forecasts, alerts and practical weather-related questions.";
+            ? city + " பகுதியில் இப்போது " +
+              Math.round(temperature) +
+              "°C, " +
+              getTamilCondition(condition) +
+              " நிலை உள்ளது. உணரப்படும் வெப்பநிலை " +
+              Math.round(feelsLike) +
+              "°C, ஈரப்பதம் " +
+              humidity +
+              "%, காற்றின் வேகம் " +
+              Math.round(windSpeed) +
+              " km/h. இன்று மழை பெய்யும் வாய்ப்பு " +
+              rainProbability +
+              "%, நாளைக்கு " +
+              tomorrowRain +
+              "%. வேறு ஏதாவது கேட்க வேண்டுமா?"
+            : "Here's the current picture for " +
+              city +
+              ": " +
+              Math.round(temperature) +
+              "°C and " +
+              condition.toLowerCase() +
+              ", feels like " +
+              Math.round(feelsLike) +
+              "°C. Humidity " +
+              humidity +
+              "%, wind " +
+              Math.round(windSpeed) +
+              " km/h. Rain chance is " +
+              rainProbability +
+              "% today and " +
+              tomorrowRain +
+              "% tomorrow. Ask me anything more specific if you like.";
     }
 
     const response = document.querySelector("#chatResponse");
@@ -1663,6 +1862,8 @@ if (
         selectedCity
     );
 }
+
+initChatSuggestions();
 
 console.log(
     "WeatherGPT JavaScript loaded successfully!"
