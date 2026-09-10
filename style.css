@@ -574,6 +574,34 @@ nav ul li a:hover {
     transform: scale(1.05);
 }
 
+.chat-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    max-width: 700px;
+    margin: 14px auto 0;
+}
+
+.suggestion-chip {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #dbeafe;
+    border-radius: 999px;
+    padding: 8px 15px;
+    font-size: 13.5px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.suggestion-chip:hover {
+    background: #2563eb;
+    color: #ffffff;
+    border-color: #2563eb;
+}
+
 .chat-response {
     max-width: 900px;
     min-height: 55px;
@@ -778,6 +806,16 @@ nav ul li a:hover {
     .chat-box button {
         width: 44px;
         height: 44px;
+    }
+
+    .chat-suggestions {
+        margin: 12px 10px 0;
+        gap: 6px;
+    }
+
+    .suggestion-chip {
+        font-size: 12.5px;
+        padding: 7px 12px;
     }
 
     .alert-card {
