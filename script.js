@@ -1,7 +1,11 @@
 /* ----------------------------------------------------------
    Windy embed — no API key needed for the basic iframe embed.
    Centers Windy's interactive wind map on the searched
-   location with a marker, wind overlay by default.
+   location with a marker, rain/precipitation overlay by
+   default (Windy's closest built-in layer for showing rain
+   and storm activity — there's no separate "thunder" layer
+   in the basic embed, but precipitation intensity is the
+   standard way storms show up visually on the map).
    ---------------------------------------------------------- */
 
 function updateWindyMap(latitude, longitude) {
@@ -16,7 +20,7 @@ function updateWindyMap(latitude, longitude) {
         detailLon: longitude,
         zoom: "9",
         level: "surface",
-        overlay: "wind",
+        overlay: "rain",
         product: "ecmwf",
         marker: "true",
         calendar: "now",
