@@ -5,6 +5,31 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "&copy; OpenStreetMap contributors"
 }).addTo(weatherMap);
 
+/* Retries a fetch once after a short delay if the first attempt fails or
+   returns a server/rate-limit error (429, 502, 503). This absorbs the
+   occasional transient blip from Open-Meteo's free tier without needing
+   the user to manually search again. Client errors (4xx other than 429)
+   are not retried since retrying won't fix a bad request. */
+async function fetchWithRetry(url, retries = 1, delayMs = 800) {
+    try {
+        const response = await fetch(url);
+
+        if (!response.ok && retries > 0 &&
+            (response.status === 429 || response.status >= 500)) {
+            await new Promise(function (resolve) { setTimeout(resolve, delayMs); });
+            return fetchWithRetry(url, retries - 1, delayMs);
+        }
+
+        return response;
+    } catch (networkError) {
+        if (retries > 0) {
+            await new Promise(function (resolve) { setTimeout(resolve, delayMs); });
+            return fetchWithRetry(url, retries - 1, delayMs);
+        }
+        throw networkError;
+    }
+}
+
 async function searchWeather(cityFromUrl = "") {
     const searchButton = document.querySelector(".weather-search button");
 
@@ -28,14 +53,16 @@ async function searchWeather(cityFromUrl = "") {
     }
 
     try {
-        const locationResponse = await fetch(
+        const locationResponse = await fetchWithRetry(
             "https://geocoding-api.open-meteo.com/v1/search?name=" +
             encodeURIComponent(city) +
             "&count=1&language=en&format=json"
         );
 
         if (!locationResponse.ok) {
-            throw new Error("Location API error");
+            throw new Error(
+                "Location API error (status " + locationResponse.status + ")"
+            );
         }
 
         const locationData = await locationResponse.json();
@@ -66,7 +93,7 @@ async function searchWeather(cityFromUrl = "") {
             weatherResults.style.display = "block";
         }
 
-        const weatherResponse = await fetch(
+        const weatherResponse = await fetchWithRetry(
             "https://api.open-meteo.com/v1/forecast?latitude=" +
             latitude +
             "&longitude=" +
@@ -76,7 +103,9 @@ async function searchWeather(cityFromUrl = "") {
         );
 
         if (!weatherResponse.ok) {
-            throw new Error("Weather API error");
+            throw new Error(
+                "Weather API error (status " + weatherResponse.status + ")"
+            );
         }
 
         const weatherData = await weatherResponse.json();
@@ -165,7 +194,10 @@ async function searchWeather(cityFromUrl = "") {
 
     } catch (error) {
         console.error("Weather Error:", error);
-        alert("Unable to get weather data. Please try again.");
+        alert(
+            "Unable to get weather data (" + error.message + "). " +
+            "This is usually temporary — please try again in a few seconds."
+        );
     } finally {
         if (searchButton) {
             searchButton.textContent = "Search Weather";
@@ -176,7 +208,7 @@ async function searchWeather(cityFromUrl = "") {
 
 async function getForecast(latitude, longitude) {
     try {
-        const response = await fetch(
+        const response = await fetchWithRetry(
             "https://api.open-meteo.com/v1/forecast?" +
             "latitude=" + latitude +
             "&longitude=" + longitude +
