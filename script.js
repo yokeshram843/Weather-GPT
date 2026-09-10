@@ -740,6 +740,9 @@ function askWeatherGPT() {
         "suduna",
         "veppam",
         "veppanilai",
+        "veyil",
+        "veyyil",
+        "veyil adikkuma",
         "வெப்பநிலை",
         "சூடு",
         "வெப்பம்"
