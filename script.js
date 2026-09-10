@@ -67,12 +67,12 @@ async function searchWeather(cityFromUrl = "") {
         }
 
         const weatherResponse = await fetch(
-            "http://127.0.0.1:8000/weather?latitude=" +
+            "https://api.open-meteo.com/v1/forecast?latitude=" +
             latitude +
             "&longitude=" +
             longitude +
-            "&city=" +
-            encodeURIComponent(city)
+            "&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code,apparent_temperature,visibility,surface_pressure" +
+            "&timezone=auto"
         );
 
         if (!weatherResponse.ok) {
