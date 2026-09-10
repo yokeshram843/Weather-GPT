@@ -62,7 +62,7 @@ async function searchWeather(cityFromUrl = "") {
     const searchButton = document.querySelector(".weather-search button");
 
     if (searchButton) {
-        searchButton.textContent = "Loading...";
+        searchButton.classList.add("is-loading");
         searchButton.disabled = true;
     }
 
@@ -73,7 +73,7 @@ async function searchWeather(cityFromUrl = "") {
         alert("Please enter a city name");
 
         if (searchButton) {
-            searchButton.textContent = "Search Weather";
+            searchButton.classList.remove("is-loading");
             searchButton.disabled = false;
         }
 
@@ -250,7 +250,7 @@ async function searchWeather(cityFromUrl = "") {
         );
     } finally {
         if (searchButton) {
-            searchButton.textContent = "Search Weather";
+            searchButton.classList.remove("is-loading");
             searchButton.disabled = false;
         }
     }
