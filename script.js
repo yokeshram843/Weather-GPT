@@ -1,9 +1,33 @@
-let weatherMap = L.map("weatherMap").setView([20.5937, 78.9629], 5);
-let weatherMarker;
+/* ----------------------------------------------------------
+   Windy embed — no API key needed for the basic iframe embed.
+   Centers Windy's interactive wind map on the searched
+   location with a marker, wind overlay by default.
+   ---------------------------------------------------------- */
 
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "&copy; OpenStreetMap contributors"
-}).addTo(weatherMap);
+function updateWindyMap(latitude, longitude) {
+    const windyFrame = document.querySelector("#windyFrame");
+
+    if (!windyFrame) return;
+
+    const params = new URLSearchParams({
+        lat: latitude,
+        lon: longitude,
+        detailLat: latitude,
+        detailLon: longitude,
+        zoom: "9",
+        level: "surface",
+        overlay: "wind",
+        product: "ecmwf",
+        marker: "true",
+        calendar: "now",
+        type: "map",
+        location: "coordinates",
+        metricWind: "km/h",
+        metricTemp: "°C"
+    });
+
+    windyFrame.src = "https://embed.windy.com/embed2.html?" + params.toString();
+}
 
 /* Retries a fetch once after a short delay if the first attempt fails or
    returns a server/rate-limit error (429, 502, 503). This absorbs the
@@ -59,31 +83,53 @@ async function searchWeather(cityFromUrl = "") {
             "&count=1&language=en&format=json"
         );
 
-        if (!locationResponse.ok) {
-            throw new Error(
-                "Location API error (status " + locationResponse.status + ")"
+        const locationData = locationResponse.ok
+            ? await locationResponse.json()
+            : { results: [] };
+
+        let location = null;
+
+        if (locationData.results && locationData.results.length > 0) {
+            location = {
+                name: locationData.results[0].name,
+                latitude: locationData.results[0].latitude,
+                longitude: locationData.results[0].longitude
+            };
+        } else {
+            // Open-Meteo's geocoder (GeoNames-backed) often lacks small
+            // villages, especially in India. Nominatim (OpenStreetMap) has
+            // denser rural coverage, so fall back to it before giving up.
+            const osmResponse = await fetchWithRetry(
+                "https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=1&q=" +
+                encodeURIComponent(city)
             );
+
+            if (osmResponse.ok) {
+                const osmData = await osmResponse.json();
+
+                if (osmData && osmData.length > 0) {
+                    const match = osmData[0];
+                    const addr = match.address || {};
+
+                    location = {
+                        name: addr.village || addr.town || addr.city ||
+                            addr.hamlet || addr.suburb || match.name || city,
+                        latitude: parseFloat(match.lat),
+                        longitude: parseFloat(match.lon)
+                    };
+                }
+            }
         }
 
-        const locationData = await locationResponse.json();
-
-        if (!locationData.results || locationData.results.length === 0) {
+        if (!location) {
             alert("Location not found. Please check the spelling and try again.");
             return;
         }
 
-        const location = locationData.results[0];
-
         const latitude = location.latitude;
         const longitude = location.longitude;
 
-        weatherMap.setView([latitude, longitude], 10);
-
-        if (weatherMarker) {
-            weatherMap.removeLayer(weatherMarker);
-        }
-
-        weatherMarker = L.marker([latitude, longitude]).addTo(weatherMap);
+        updateWindyMap(latitude, longitude);
 
         const actualCityName = location.name || city;
 
