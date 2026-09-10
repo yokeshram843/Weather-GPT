@@ -6,7 +6,6 @@
     <title>WeatherGPT - Weather Dashboard</title>
 
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 </head>
 
 <body>
@@ -259,15 +258,20 @@
 
     <div class="map-section">
 
-        <h2>📍 Location Map</h2>
+        <h2>📍 Live Wind Map</h2>
 
-        <div id="weatherMap"></div>
+        <div id="windyContainer">
+            <iframe
+                id="windyFrame"
+                title="Windy interactive weather map"
+                loading="lazy">
+            </iframe>
+        </div>
 
     </div>
 
 </section>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="script.js"></script>
 
 </body>
