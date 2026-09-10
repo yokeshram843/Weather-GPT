@@ -100,7 +100,7 @@ nav ul li a:hover {
 
 .weather-search input {
     flex: 1;
-    height: 52px;
+    height: 72px;
     padding: 0 17px;
     border: 2px solid #dbeafe;
     border-radius: 12px;
