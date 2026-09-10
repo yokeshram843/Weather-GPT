@@ -573,6 +573,17 @@ function updateWeatherAlert(weatherCode, city) {
         }
     }
 }
+/* Fills the chat input with a suggested question and asks it right away —
+   used by the quick-suggestion chips under the chat box. */
+function askSuggestion(question) {
+    const input = document.getElementById("chatInput");
+
+    if (!input) return;
+
+    input.value = question;
+    askWeatherGPT();
+}
+
 function askWeatherGPT() {
     const input = document.querySelector("#chatInput");
 
@@ -607,13 +618,15 @@ function askWeatherGPT() {
     // as Thanglish and still reply in Tamil — matching the language the
     // person is actually asking in, not just the script they typed it in.
     const thanglishWords = [
-        "nalikku", "nalaki", "naalaiki", "naalai", "indha",
-        "mazhai", "veyyil", "sudu", "thani",
-        "kaathu", "kaatru", "eeram", "kulir", "veppam",
+        "nalikku", "nalaki", "naalaiki", "naalaikku", "nalaikku", "naalai", "indha",
+        "mazhai", "mazhaiya", "veyyil", "sudu", "suduna", "thani",
+        "kaathu", "kaatru", "eeram", "eerapadham", "kulir", "veppam", "veppanilai",
         "vaanilai", "eppadi", "irukku", "peyyuma", "peyyumaa",
         "varuma", "poidalama", "poidalaama", "velila", "veliya",
-        "pogalama", "pogalaama", "kudai", "thuni", "kaaya",
-        "echarikkai", "aabathu", "bayama"
+        "pogalama", "pogalaama", "kudai", "kudaya", "thuni", "thunigal", "kaaya",
+        "kaayavaikka", "kaayapoda", "echarikkai", "echarikai", "aabathu",
+        "bayama", "bayamana", "therivu", "theriyuma", "kaalanilai",
+        "munnarivipu", "varum naatkal", "indru", "kalluri"
     ];
 
     const hasThanglish = thanglishWords.some(function (word) {
@@ -646,14 +659,18 @@ function askWeatherGPT() {
         "நாளைக்கு",
         "நாளை",
         "naalaiki",
+        "naalaikku",
         "nalaki",
-        "nalikku"
+        "nalikku",
+        "nalaikku",
+        "naalai"
     );
 
     const isRain = hasAny(
         "rain",
         "rainy",
         "mazhai",
+        "mazhaiya",
         "மழை"
     );
 
@@ -666,6 +683,11 @@ function askWeatherGPT() {
         "wash clothes",
         "dress",
         "dress-ah",
+        "thuni",
+        "thunigal",
+        "kaaya",
+        "kaayavaikka",
+        "kaayapoda",
         "துணி",
         "துணிகளை",
         "காய",
@@ -684,6 +706,14 @@ function askWeatherGPT() {
         "college",
         "school",
         "ride",
+        "veliya",
+        "velila",
+        "pogalama",
+        "pogalaama",
+        "poidalama",
+        "poidalaama",
+        "kalluri",
+        "bike-la",
         "பயணம்",
         "வெளியே",
         "போகலாமா",
@@ -695,6 +725,9 @@ function askWeatherGPT() {
 
     const isUmbrella = hasAny(
         "umbrella",
+        "kudai",
+        "kudaya",
+        "kudai edukkanuma",
         "குடை"
     );
 
@@ -703,6 +736,10 @@ function askWeatherGPT() {
         "temp",
         "hot",
         "heat",
+        "sudu",
+        "suduna",
+        "veppam",
+        "veppanilai",
         "வெப்பநிலை",
         "சூடு",
         "வெப்பம்"
@@ -710,12 +747,17 @@ function askWeatherGPT() {
 
     const isHumidity = hasAny(
         "humidity",
+        "eeram",
+        "eerapadham",
         "ஈரப்பதம்"
     );
 
     const isWind = hasAny(
         "wind",
         "wind speed",
+        "kaathu",
+        "kaatru",
+        "kaatru veganam",
         "காற்று"
     );
 
@@ -723,6 +765,8 @@ function askWeatherGPT() {
         "feels like",
         "feel like",
         "outside feel",
+        "velila eppadi irukku",
+        "eppadi irukku",
         "வெளியே எப்படி இருக்கு"
     );
 
@@ -732,6 +776,11 @@ function askWeatherGPT() {
         "danger",
         "safe",
         "safety",
+        "echarikkai",
+        "echarikai",
+        "aabathu",
+        "bayama",
+        "bayamana",
         "எச்சரிக்கை",
         "ஆபத்து",
         "பாதுகாப்பு"
@@ -741,6 +790,8 @@ function askWeatherGPT() {
         "forecast",
         "7 day",
         "seven day",
+        "varum naatkal",
+        "munnarivipu",
         "வரும் நாட்கள்",
         "முன்னறிவிப்பு"
     );
@@ -748,22 +799,30 @@ function askWeatherGPT() {
     const isVisibility = hasAny(
         "visibility",
         "visible",
+        "therivu",
+        "theriyuma",
         "தெரிவு"
     );
 
     const isPressure = hasAny(
         "pressure",
+        "kaatru azhutham",
         "காற்றழுத்தம்"
     );
 
     const isClimate = hasAny(
         "climate",
+        "kaalanilai",
         "காலநிலை"
     );
 
     const isWeather = hasAny(
         "weather",
         "today",
+        "vaanilai",
+        "indha ooru vaanilai",
+        "indru",
+        "இன்று வானிலை",
         "வானிலை",
         "இன்று"
     );
